@@ -10,16 +10,16 @@ tidies up the source data and provides standard package documentation
 to make the analyses reproducible.
 
 A PDF of the UvA report by Peeters, Klassen, and van de Weil can be
-downloaded from the [[%20http://retractionwatch.com/2015/06/03/yet-another-investigation-casts-doubt-on-forsters-findings-he-responds-with-outrage/][Retraction Watch website]].
+downloaded from the [[https://drive.google.com/file/d/0B5Lm6NdvGIQbamlhVlpESmQwZTA/view][Retraction Watch website]].
 
 The original R scripts on which the package is based can be
 downloaded in a single zip file, which is available [[https://www.dropbox.com/s/wu9ec0xes5n7jgr/forster_scripts.zip?dl=1][here]].
 
-The package contains the following three main tables: =pubs=,
-=studies=, and =study_stats=.  These were extracted from the original
-scripts.  The table =findings= has the results of the statistical
-investigation from the original report.  These results can be
-reproduced using the functions =deltaF.linear()= and =evi.val()=.
+The package contains three main tables: =pubs=, =studies=, and
+=study_stats=.  These were extracted from the original scripts.  The
+table =findings= has the results of the statistical investigation from
+the original report.  The findings can be reproduced using the
+functions =deltaF.linear()= and =evi.val()=.
 
 * Working with the package
 	:PROPERTIES:
@@ -27,8 +27,10 @@ reproduced using the functions =deltaF.linear()= and =evi.val()=.
 	:END:
 
 Below are scripts showing how to reproduce the analyses in two
-different ways: (1) using functions in base R or (2) using the
-add-on package [[https://github.com/hadley/dplyr][dplyr]].
+different ways: 
+
+1. using functions in base R, or 
+2. using the add-on package [[https://github.com/hadley/dplyr][dplyr]].
 
 ** Reproducing analyses using base R
 
