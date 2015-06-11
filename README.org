@@ -1,0 +1,197 @@
+#+TITLE: R package =forsterUVA=
+#+OPTIONS: toc:nil num:nil
+
+* Background
+
+This package contained reprocessed data and refactored code from the
+investigation by the University of Amsterdam (UvA) of the scientific
+integrity of publications by Jens Forster.  The =forsterUVA= package
+tidies up the source data and provides standard package documentation
+to make the analyses reproducible.
+
+A PDF of the UvA report by Peeters, Klassen, and van de Weil can be
+downloaded from the [[%20http://retractionwatch.com/2015/06/03/yet-another-investigation-casts-doubt-on-forsters-findings-he-responds-with-outrage/][Retraction Watch website]].
+
+The original R scripts on which the package is based can be
+downloaded in a single zip file, which is available [[https://www.dropbox.com/s/wu9ec0xes5n7jgr/forster_scripts.zip?dl=1][here]].
+
+The package contains the following three main tables: =pubs=,
+=studies=, and =study_stats=.  These were extracted from the original
+scripts.  The table =findings= has the results of the statistical
+investigation from the original report.  These results can be
+reproduced using the functions =deltaF.linear()= and =evi.val()=.
+
+* Working with the package
+	:PROPERTIES:
+	:header-args:R: :session *R* :exports both :results value
+	:END:
+
+Below are scripts showing how to reproduce the analyses in two
+different ways: (1) using functions in base R or (2) using the
+add-on package [[https://github.com/hadley/dplyr][dplyr]].
+
+** Reproducing analyses using base R
+
+*** Stats for individual studies
+
+#+BEGIN_SRC R :colnames yes
+  library("forsterUVA")
+ 
+  ## calculate delta F p-value and V statistic for ea study
+  ss2 <- merge(studies, study_stats, c("pub", "study"))
+  ss2$pdF <- apply(as.matrix(ss2[, -c(1:2)]), 1, deltaFp)
+  ss2$V <- apply(as.matrix(ss2[, -c(1:2)]), 1, eviVal)
+
+  dat <- ss2[, c("pub", "study", "pdF", "V")]
+  head(transform(dat, pdF = round(pdF, 4), V = round(V, 1)), 10)
+#+END_SRC
+
+#+RESULTS:
+| pub           | study         |    pdF |   V |
+|---------------+---------------+--------+-----|
+| D.JF.L09.JESP | exp1.WA.NS.B1 | 0.9336 | 5.5 |
+| D.JF.L09.JESP | exp1.WA.NS.B2 | 0.4927 | 1.1 |
+| D.JF.L09.JESP | exp1.WA.NS.B3 | 0.4609 |   1 |
+| D.JF.L09.JESP | exp1.WA.S.B1  | 0.8647 | 3.2 |
+| D.JF.L09.JESP | exp1.WA.S.B2  |  0.001 |   1 |
+| D.JF.L09.JESP | exp1.WA.S.B3  | 0.0492 |   1 |
+| D.JF.L09.JESP | exp1.WU.NS.B1 | 0.9373 | 6.3 |
+| D.JF.L09.JESP | exp1.WU.NS.B2 | 0.8817 | 3.7 |
+| D.JF.L09.JESP | exp1.WU.NS.B3 | 0.5455 | 1.2 |
+| D.JF.L09.JESP | exp1.WU.S.B1  | 0.8462 | 1.5 |
+
+*** Stats for individual publications
+
+#+BEGIN_SRC R :colnames yes
+  ## overall stats for each publication
+  pubdata <- merge(ss2, pubs, c("pub"))
+  pubsplit <- split(pubdata, pubdata$pub)
+
+  pubs2 <- data.frame(pub = names(pubsplit), stringsAsFactors = FALSE)
+  pubs2$p <- unlist(lapply(pubsplit, combine_pdF))
+  pubs2$V_prod <- unlist(lapply(pubsplit, combine_V))
+  pubs2$n_studies <- unlist(lapply(pubsplit, nrow))
+  dat <- transform(merge(pubs2, pubs, by = "pub"),
+                   p = round(p, 4), V_prod = round(V_prod, 4))
+  dat[order(dat$section, dat$pub), c("pub", "section", "p", "V_prod", "n_studies")]
+#+END_SRC
+
+#+RESULTS:
+| pub            | section                  |      p |           V_prod | n_studies |
+|----------------+--------------------------+--------+------------------+-----------|
+| Hagtvedt       | control                  | 0.3025 |           1.6384 |         2 |
+| Hunt           | control                  | 0.7776 |                1 |         1 |
+| Jia            | control                  | 0.6911 |                1 |         1 |
+| Kanten         | control                  | 0.4236 |            1.756 |         2 |
+| Lerouge        | control                  | 0.4411 |          14.8772 |         4 |
+| Malkoc         | control                  | 0.0952 |           5.2558 |         1 |
+| Polman         | control                  | 0.3785 |           1.3369 |         1 |
+| Rook           | control                  | 0.5262 |           1.6933 |         2 |
+| Smith          | control                  | 0.2995 |           8.5948 |         7 |
+| L.JF09.JPSP    | JF_co, Amsterdam         |      0 |         31319196 |        18 |
+| WCY.JF11.JESP  | JF_co, Amsterdam         | 0.6811 |                1 |         1 |
+| D.JF.L09.JESP  | JF_co, Bremen / Würzburg | 0.2544 |      930785.4679 |        17 |
+| D.JF.LR10.PSPB | JF_co, Bremen / Würzburg | 0.9995 |          40.7372 |        13 |
+| K.JF.D10.SPPS  | JF_co, Bremen / Würzburg | 0.0122 |        4025.8013 |         8 |
+| L.JF09.CS      | JF_co, Bremen / Würzburg | 0.1088 |          12.7841 |         6 |
+| FG.JF12.MP     | JF_co, others            | 0.9561 |           7.7661 |         8 |
+| JF.D12.JESP    | JF_first                 | 0.0053 |      250357.4084 |        12 |
+| JF.D12.SPPS    | JF_first                 |      0 | 4227517188560.13 |        19 |
+| JF.EO09.PSPB   | JF_first                 |  2e-04 |        2958.2939 |         5 |
+| JF.LK08.JPSP   | JF_first                 | 0.6263 |        15888.188 |        20 |
+| JF.LS09.JEPG   | JF_first                 |  0.002 |     3723685.4017 |        20 |
+| JF09.JEPG      | JF_solo                  |      0 | 538966994609.498 |        21 |
+| JF10.EJSP      | JF_solo                  | 0.0025 |          65.0263 |         2 |
+| JF11.JEPG      | JF_solo                  |      0 |              nil |        18 |
+
+** Reproducing analyses using dplyr
+
+*** Stats for individual studies
+
+#+BEGIN_SRC R :colnames yes
+  library("forsterUVA")
+  library("dplyr")
+
+  grouped_data <- studies %>%
+      inner_join(study_stats, c("pub", "study")) %>%
+      group_by(pub, study)
+
+  ## calculate p-value for delta F test for each study
+  dfp <- grouped_data %>% do(deltaFp(., TRUE)) %>% ungroup()
+
+  ## calculate evidential value (V statistic) for each study
+  evi <- grouped_data %>% do(eviVal(., TRUE)) %>% ungroup()
+
+  ## print out
+  dfp %>%
+      inner_join(evi, c("pub", "study")) %>%
+      mutate(pdF = round(pdF, 4), V = round(V, 1)) %>%
+      head(10)
+#+END_SRC
+
+#+RESULTS:
+| pub           | study         |    pdF |   V |
+|---------------+---------------+--------+-----|
+| D.JF.L09.JESP | exp1.WA.NS.B1 | 0.9336 | 5.5 |
+| D.JF.L09.JESP | exp1.WA.NS.B2 | 0.4927 | 1.1 |
+| D.JF.L09.JESP | exp1.WA.NS.B3 | 0.4609 |   1 |
+| D.JF.L09.JESP | exp1.WA.S.B1  | 0.8647 | 3.2 |
+| D.JF.L09.JESP | exp1.WA.S.B2  |  0.001 |   1 |
+| D.JF.L09.JESP | exp1.WA.S.B3  | 0.0492 |   1 |
+| D.JF.L09.JESP | exp1.WU.NS.B1 | 0.9373 | 6.3 |
+| D.JF.L09.JESP | exp1.WU.NS.B2 | 0.8817 | 3.7 |
+| D.JF.L09.JESP | exp1.WU.NS.B3 | 0.5455 | 1.2 |
+| D.JF.L09.JESP | exp1.WU.S.B1  | 0.8462 | 1.5 |
+
+*** Stats for individual publications
+
+#+BEGIN_SRC R :colnames yes
+  pub_groups <- dfp %>%
+      inner_join(evi, c("pub", "study")) %>%
+      inner_join(pubs, c("pub")) %>%
+      group_by(pub, section)
+
+  ## overall p value for each publication
+  p_vals <- pub_groups %>% do(combine_pdF(., TRUE)) %>% ungroup()
+
+  ## overall V value for each publication
+  V_vals <- pub_groups %>% do(combine_V(., TRUE)) %>% ungroup()
+
+  ## number of studies for each publication
+  n_studies <- pub_groups %>% summarize(n_studies = n()) %>% ungroup()
+
+  p_vals %>%
+      inner_join(V_vals) %>%
+      inner_join(n_studies) %>%
+      mutate(p = round(p, 4), V_prod = round(V_prod, 1)) %>%
+      arrange(section, pub)
+#+END_SRC
+
+#+RESULTS:
+| pub            | section                  |      p |          V_prod | n_studies |
+|----------------+--------------------------+--------+-----------------+-----------|
+| L.JF09.JPSP    | JF_co, Amsterdam         |      0 |        31319196 |        18 |
+| WCY.JF11.JESP  | JF_co, Amsterdam         | 0.6811 |               1 |         1 |
+| D.JF.L09.JESP  | JF_co, Bremen / Würzburg | 0.2544 |        930785.5 |        17 |
+| D.JF.LR10.PSPB | JF_co, Bremen / Würzburg | 0.9995 |            40.7 |        13 |
+| K.JF.D10.SPPS  | JF_co, Bremen / Würzburg | 0.0122 |          4025.8 |         8 |
+| L.JF09.CS      | JF_co, Bremen / Würzburg | 0.1088 |            12.8 |         6 |
+| FG.JF12.MP     | JF_co, others            | 0.9561 |             7.8 |         8 |
+| JF.D12.JESP    | JF_first                 | 0.0053 |        250357.4 |        12 |
+| JF.D12.SPPS    | JF_first                 |      0 | 4227517188560.1 |        19 |
+| JF.EO09.PSPB   | JF_first                 |  2e-04 |          2958.3 |         5 |
+| JF.LK08.JPSP   | JF_first                 | 0.6263 |         15888.2 |        20 |
+| JF.LS09.JEPG   | JF_first                 |  0.002 |       3723685.4 |        20 |
+| JF09.JEPG      | JF_solo                  |      0 |  538966994609.5 |        21 |
+| JF10.EJSP      | JF_solo                  | 0.0025 |              65 |         2 |
+| JF11.JEPG      | JF_solo                  |      0 |             nil |        18 |
+| Hagtvedt       | control                  | 0.3025 |             1.6 |         2 |
+| Hunt           | control                  | 0.7776 |               1 |         1 |
+| Jia            | control                  | 0.6911 |               1 |         1 |
+| Kanten         | control                  | 0.4236 |             1.8 |         2 |
+| Lerouge        | control                  | 0.4411 |            14.9 |         4 |
+| Malkoc         | control                  | 0.0952 |             5.3 |         1 |
+| Polman         | control                  | 0.3785 |             1.3 |         1 |
+| Rook           | control                  | 0.5262 |             1.7 |         2 |
+| Smith          | control                  | 0.2995 |             8.6 |         7 |
+
