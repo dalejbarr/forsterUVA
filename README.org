@@ -21,6 +21,17 @@ table =findings= has the results of the statistical investigation from
 the original report.  The findings can be reproduced using the
 functions =deltaF.linear()= and =evi.val()=.
 
+
+* Installation
+
+You need to have the add-on package =devtools= installed to be able to install =forsterUVA=.
+
+#+BEGIN_SRC R :eval never :exports code
+  library("devtools")
+
+  install_github("dalejbarr/forsterUVA")
+#+END_SRC
+
 * Working with the package
 	:PROPERTIES:
 	:header-args:R: :session *R* :exports both :results value
