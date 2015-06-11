@@ -10,7 +10,7 @@ tidies up the source data and provides standard package documentation
 to make the analyses reproducible.
 
 A PDF of the UvA report by Peeters, Klassen, and van de Weil can be
-downloaded from the [[https://drive.google.com/file/d/0B5Lm6NdvGIQbamlhVlpESmQwZTA/view][Retraction Watch website]].
+downloaded [[https://drive.google.com/file/d/0B5Lm6NdvGIQbamlhVlpESmQwZTA/view][here]].
 
 The original R scripts on which the package is based can be
 downloaded in a single zip file, which is available [[https://www.dropbox.com/s/wu9ec0xes5n7jgr/forster_scripts.zip?dl=1][here]].
